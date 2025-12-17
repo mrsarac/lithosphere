@@ -29,3 +29,6 @@ dist-ssr
 # Environment
 .env
 .env.local
+
+# Documentation (local only)
+docs/
