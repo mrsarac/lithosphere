@@ -908,15 +908,41 @@ User request: ${prompt}`;
 // === MAIN DEBUG PANEL ===
 // ============================================
 
+// Capture configuration
+export interface CaptureConfig {
+  screenshotFormat: 'png' | 'jpeg';
+  screenshotQuality: number;
+  videoFormat: 'webm';
+  videoBitrate: number;
+  videoFps: number;
+}
+
+export const DEFAULT_CAPTURE_CONFIG: CaptureConfig = {
+  screenshotFormat: 'png',
+  screenshotQuality: 0.95,
+  videoFormat: 'webm',
+  videoBitrate: 5000000, // 5 Mbps
+  videoFps: 60,
+};
+
 interface DebugPanelProps {
   config: ShaderConfig;
   onConfigChange: (config: ShaderConfig) => void;
   onMeshImport?: (file: File) => void;
+  rendererRef?: React.MutableRefObject<any>;
 }
 
-const DebugPanel: React.FC<DebugPanelProps> = ({ config, onConfigChange, onMeshImport }) => {
+const DebugPanel: React.FC<DebugPanelProps> = ({ config, onConfigChange, onMeshImport, rendererRef }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'core' | 'gel' | 'lighting' | 'animation' | 'shape' | 'camera' | 'effects' | 'presets' | 'ai' | 'info'>('core');
+  const [activeTab, setActiveTab] = useState<'core' | 'gel' | 'lighting' | 'animation' | 'shape' | 'camera' | 'effects' | 'capture' | 'presets' | 'ai' | 'info'>('core');
+
+  // Capture state
+  const [captureConfig, setCaptureConfig] = useState<CaptureConfig>(DEFAULT_CAPTURE_CONFIG);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [meshLoading, setMeshLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [geminiApiKey, setGeminiApiKey] = useState(() => {
@@ -1192,6 +1218,142 @@ const gelMaterial = new MeshPhysicalNodeMaterial({
     URL.revokeObjectURL(url);
   }, [generateTSLCode]);
 
+  // ============================================
+  // === CAPTURE FUNCTIONS ===
+  // ============================================
+
+  const takeScreenshot = useCallback(() => {
+    if (!rendererRef?.current) {
+      console.warn('[Capture] No renderer available');
+      return;
+    }
+
+    const renderer = rendererRef.current;
+    const canvas = renderer.domElement;
+
+    // Create a temporary canvas with the same dimensions
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const ctx = tempCanvas.getContext('2d');
+
+    if (!ctx) {
+      console.error('[Capture] Failed to get 2D context');
+      return;
+    }
+
+    // Draw the WebGPU canvas to the temp canvas
+    ctx.drawImage(canvas, 0, 0);
+
+    // Convert to data URL with specified format and quality
+    const mimeType = captureConfig.screenshotFormat === 'jpeg' ? 'image/jpeg' : 'image/png';
+    const dataUrl = tempCanvas.toDataURL(mimeType, captureConfig.screenshotQuality);
+
+    // Download
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = `lithosphere-${Date.now()}.${captureConfig.screenshotFormat}`;
+    link.click();
+
+    console.log('[Capture] Screenshot saved');
+  }, [rendererRef, captureConfig.screenshotFormat, captureConfig.screenshotQuality]);
+
+  const startRecording = useCallback(() => {
+    if (!rendererRef?.current) {
+      console.warn('[Capture] No renderer available');
+      return;
+    }
+
+    const renderer = rendererRef.current;
+    const canvas = renderer.domElement;
+
+    // Get stream from canvas
+    const stream = canvas.captureStream(captureConfig.videoFps);
+
+    // Create MediaRecorder
+    const options: MediaRecorderOptions = {
+      mimeType: 'video/webm;codecs=vp9',
+      videoBitsPerSecond: captureConfig.videoBitrate,
+    };
+
+    // Fallback if vp9 is not supported
+    if (!MediaRecorder.isTypeSupported(options.mimeType!)) {
+      options.mimeType = 'video/webm;codecs=vp8';
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options.mimeType = 'video/webm';
+      }
+    }
+
+    try {
+      const mediaRecorder = new MediaRecorder(stream, options);
+      recordedChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `lithosphere-${Date.now()}.webm`;
+        link.click();
+        URL.revokeObjectURL(url);
+        console.log('[Capture] Video saved');
+      };
+
+      mediaRecorder.start(100); // Collect data every 100ms
+      mediaRecorderRef.current = mediaRecorder;
+      setIsRecording(true);
+      setRecordingDuration(0);
+
+      // Start duration timer
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingDuration((prev) => prev + 1);
+      }, 1000);
+
+      console.log('[Capture] Recording started');
+    } catch (error) {
+      console.error('[Capture] Failed to start recording:', error);
+    }
+  }, [rendererRef, captureConfig.videoFps, captureConfig.videoBitrate]);
+
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current = null;
+      setIsRecording(false);
+
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+
+      console.log('[Capture] Recording stopped');
+    }
+  }, [isRecording]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
+      if (mediaRecorderRef.current && isRecording) {
+        mediaRecorderRef.current.stop();
+      }
+    };
+  }, [isRecording]);
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const tabs = [
     { id: 'core', label: 'Core', icon: '🔴', shortcut: '1' },
     { id: 'gel', label: 'Gel', icon: '💎', shortcut: '2' },
@@ -1200,9 +1362,10 @@ const gelMaterial = new MeshPhysicalNodeMaterial({
     { id: 'shape', label: 'Shape', icon: '🔷', shortcut: '5' },
     { id: 'camera', label: 'Camera', icon: '📷', shortcut: '6' },
     { id: 'effects', label: 'Effects', icon: '✨', shortcut: '7' },
-    { id: 'presets', label: 'Presets', icon: '📦', shortcut: '8' },
-    { id: 'ai', label: 'AI', icon: '🤖', shortcut: '9' },
-    { id: 'info', label: 'Info', icon: 'ℹ️', shortcut: '0' },
+    { id: 'capture', label: 'Capture', icon: '📸', shortcut: '8' },
+    { id: 'presets', label: 'Presets', icon: '📦', shortcut: '9' },
+    { id: 'ai', label: 'AI', icon: '🤖', shortcut: '0' },
+    { id: 'info', label: 'Info', icon: 'ℹ️', shortcut: '' },
   ] as const;
 
   return (
@@ -1640,12 +1803,12 @@ const gelMaterial = new MeshPhysicalNodeMaterial({
                   />
                 </Section>
 
-                <Section title="Vignette" icon="🔲" defaultOpen badge="Soon">
+                <Section title="Vignette" icon="🔲" defaultOpen badge="WebGPU">
                   <Toggle
                     label="Enabled"
                     value={config.postProcess.vignetteEnabled}
                     onChange={(v) => updatePostProcess({ vignetteEnabled: v })}
-                    tooltip="Enable edge darkening effect (Coming Soon)"
+                    tooltip="Enable edge darkening effect"
                   />
                   <Slider
                     label="Intensity"
@@ -1654,6 +1817,118 @@ const gelMaterial = new MeshPhysicalNodeMaterial({
                     onChange={(v) => updatePostProcess({ vignetteIntensity: v })}
                     tooltip="Vignette darkness strength"
                   />
+                </Section>
+              </div>
+            )}
+
+            {/* Capture Tab */}
+            {activeTab === 'capture' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Section title="Screenshot" icon="📸" defaultOpen badge="New">
+                  <Select
+                    label="Format"
+                    value={captureConfig.screenshotFormat}
+                    options={[
+                      { value: 'png', label: 'PNG (Lossless)' },
+                      { value: 'jpeg', label: 'JPEG (Smaller)' },
+                    ]}
+                    onChange={(v) => setCaptureConfig({ ...captureConfig, screenshotFormat: v as 'png' | 'jpeg' })}
+                  />
+                  {captureConfig.screenshotFormat === 'jpeg' && (
+                    <Slider
+                      label="Quality"
+                      value={captureConfig.screenshotQuality}
+                      min={0.5} max={1} step={0.05}
+                      onChange={(v) => setCaptureConfig({ ...captureConfig, screenshotQuality: v })}
+                      tooltip="JPEG compression quality"
+                    />
+                  )}
+                  <button
+                    onClick={takeScreenshot}
+                    disabled={!rendererRef?.current}
+                    className="w-full mt-3 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:from-zinc-700 disabled:to-zinc-700 text-white text-[12px] font-medium rounded transition-all disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <span>📸</span>
+                    <span>Take Screenshot</span>
+                  </button>
+                  <p className="text-[9px] text-zinc-500 mt-2 text-center">
+                    Captures the current view at full resolution
+                  </p>
+                </Section>
+
+                <Section title="Video Recording" icon="🎬" defaultOpen badge="New">
+                  <Slider
+                    label="Frame Rate"
+                    value={captureConfig.videoFps}
+                    min={24} max={60} step={1}
+                    onChange={(v) => setCaptureConfig({ ...captureConfig, videoFps: v })}
+                    unit=" fps"
+                    tooltip="Recording frame rate"
+                  />
+                  <Slider
+                    label="Bitrate"
+                    value={captureConfig.videoBitrate / 1000000}
+                    min={1} max={15} step={0.5}
+                    onChange={(v) => setCaptureConfig({ ...captureConfig, videoBitrate: v * 1000000 })}
+                    unit=" Mbps"
+                    tooltip="Video quality (higher = larger file)"
+                  />
+
+                  {isRecording ? (
+                    <div className="mt-3 space-y-3">
+                      <div className="flex items-center justify-center gap-3 py-3 bg-red-500/20 border border-red-500/30 rounded">
+                        <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+                        <span className="text-red-400 font-mono text-[14px] font-bold">
+                          {formatDuration(recordingDuration)}
+                        </span>
+                        <span className="text-[10px] text-red-400/70">Recording...</span>
+                      </div>
+                      <button
+                        onClick={stopRecording}
+                        className="w-full py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-[12px] font-medium rounded transition-all flex items-center justify-center gap-2"
+                      >
+                        <span>⏹</span>
+                        <span>Stop & Save</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={startRecording}
+                      disabled={!rendererRef?.current}
+                      className="w-full mt-3 py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 disabled:from-zinc-700 disabled:to-zinc-700 text-white text-[12px] font-medium rounded transition-all disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      <span>🔴</span>
+                      <span>Start Recording</span>
+                    </button>
+                  )}
+                  <p className="text-[9px] text-zinc-500 mt-2 text-center">
+                    Records as WebM video with VP9 codec
+                  </p>
+                </Section>
+
+                <Section title="Tips" icon="💡" defaultOpen>
+                  <div className="space-y-2 text-[10px] text-zinc-400">
+                    <div className="flex items-start gap-2">
+                      <span className="text-amber-400">📸</span>
+                      <span>Screenshots capture the current frame instantly</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-amber-400">🎬</span>
+                      <span>Video captures animation in real-time</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-amber-400">⚡</span>
+                      <span>Higher bitrate = better quality, larger files</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-amber-400">🎯</span>
+                      <span>Use PNG for maximum quality screenshots</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-amber-400">🖥</span>
+                      <span>Resolution matches your screen size</span>
+                    </div>
+                  </div>
                 </Section>
               </div>
             )}

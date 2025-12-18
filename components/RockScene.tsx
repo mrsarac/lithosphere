@@ -100,6 +100,7 @@ const RockScene: React.FC = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [config, setConfig] = useState<ShaderConfig>(DEFAULT_CONFIG);
   const gltfLoaderRef = useRef<any>(null);
+  const rendererRef = useRef<any>(null);
   const sceneRefs = useRef<SceneRefs>({
     coreMesh: null,
     gelMesh: null,
@@ -385,6 +386,7 @@ const RockScene: React.FC = () => {
         if (isDisposed || !mountRef.current) return;
         mountRef.current.appendChild(renderer.domElement);
         sceneRefs.current.renderer = renderer;
+        rendererRef.current = renderer;
       } catch (e) {
         console.error("Failed to initialize WebGPURenderer", e);
         return;
@@ -890,7 +892,7 @@ const RockScene: React.FC = () => {
       )}
 
       {/* Debug Panel */}
-      <DebugPanel config={config} onConfigChange={handleConfigChange} onMeshImport={handleMeshImport} />
+      <DebugPanel config={config} onConfigChange={handleConfigChange} onMeshImport={handleMeshImport} rendererRef={rendererRef} />
     </div>
   );
 };
