@@ -144,7 +144,7 @@ Open the **SHADER STUDIO** panel at the bottom of the screen:
 ## Changelog
 
 <!-- CHANGELOG_START -->
-### v3.0 (December 2024) - Sprint 2: Visual Capture
+### v3.0 (2025-12-18) - Sprint 2: Visual Capture
 **New Features:**
 - 🔲 **Vignette Effect** - Custom TSL vignette with UV-based distance calculation and smoothstep falloff
 - 📸 **Screenshot Capture** - PNG (lossless) or JPEG with quality control
@@ -154,7 +154,7 @@ Open the **SHADER STUDIO** panel at the bottom of the screen:
 - ⏱️ **Recording Timer** - Real-time duration display during video capture
 - 📊 **New Capture Tab** - Dedicated tab for all capture controls
 
-### v2.5 (December 2024) - Sprint 1: Visual Evolution
+### v2.5 (2025-12-17) - Sprint 1: Visual Evolution
 **New Features:**
 - ✨ **Post-Processing Pipeline** - WebGPU-native bloom, chromatic aberration, vignette
 - 🎨 **TSL Bloom Effect** - Configurable intensity, threshold, and radius
@@ -163,7 +163,7 @@ Open the **SHADER STUDIO** panel at the bottom of the screen:
 - 📤 **TSL Code Export** - Copy/download shader code for external use
 - 🎯 **Effects Tab** - Centralized post-processing controls
 
-### v2.1 (December 2024)
+### v2.1 (2024-12-10)
 **New Features:**
 - 🎬 **Camera Tab** - FOV, distance limits, damping controls
 - 💡 **Advanced Lighting** - Key light position (X/Y/Z), dynamic lighting toggle, orbit speed
@@ -176,7 +176,7 @@ Open the **SHADER STUDIO** panel at the bottom of the screen:
 - 💾 **API Key Persistence** - Gemini key saved to localStorage
 - 📝 **Tooltips** - Helpful hints on all controls
 
-### v2.0 (December 2024)
+### v2.0 (2024-12-05)
 **Major Update:**
 - ✨ **Shader Studio Panel** - Professional debug interface inspired by Substance Designer
 - 🎨 **10 Presets** - HAL 9000, Blue Crystal, Toxic Green, Golden Sun, Purple Void, White Dwarf + 4 new
@@ -186,7 +186,7 @@ Open the **SHADER STUDIO** panel at the bottom of the screen:
 - 💎 **Gel Controls** - Transmission, IOR, thickness, attenuation
 - 💡 **Lighting Controls** - Key, fill, rim, HAL core lights
 
-### v1.0 (November 2024)
+### v1.0 (2024-11-28)
 **Initial Release:**
 - 🌐 **WebGPU Rendering** - Three.js with TSL (Three Shading Language)
 - 🔮 **Dual-Mesh System** - Inner core + outer gel shell
