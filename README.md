@@ -37,10 +37,14 @@ The project includes a professional **Shader Studio** debug panel (inspired by S
 | **WebGPU Rendering** | Next-gen graphics API with Three.js TSL (Three Shading Language) |
 | **Dual-Mesh System** | Inner glowing core + transparent outer gel shell with light bleeding |
 | **HAL 9000 Aesthetic** | Menacing red glow with pulsing animations |
-| **Shader Studio Panel** | Professional debug panel with 50+ real-time parameters |
-| **6 Built-in Presets** | HAL 9000, Blue Crystal, Toxic Green, Golden Sun, Purple Void, White Dwarf |
+| **Shader Studio Panel** | Professional debug panel with 70+ real-time parameters |
+| **Post-Processing** | Bloom, chromatic aberration, vignette with WebGPU-native TSL |
+| **HDR Environment** | Load .hdr/.exr files for realistic reflections and backgrounds |
+| **Capture Studio** | Screenshot (PNG/JPEG) + video recording (WebM up to 60fps) |
+| **GLTF Import** | Load custom 3D models with auto-normalization |
+| **10 Built-in Presets** | HAL 9000, Blue Crystal, Toxic Green, Golden Sun, Purple Void + 5 more |
 | **AI Integration** | Gemini-powered natural language shader suggestions |
-| **Import/Export** | Save and share your shader configurations as JSON |
+| **TSL Code Export** | Copy or download your shader code for external use |
 | **60 FPS Performance** | Optimized procedural noise with MaterialX functions |
 
 ---
@@ -140,6 +144,25 @@ Open the **SHADER STUDIO** panel at the bottom of the screen:
 ## Changelog
 
 <!-- CHANGELOG_START -->
+### v3.0 (December 2024) - Sprint 2: Visual Capture
+**New Features:**
+- 🔲 **Vignette Effect** - Custom TSL vignette with UV-based distance calculation and smoothstep falloff
+- 📸 **Screenshot Capture** - PNG (lossless) or JPEG with quality control
+- 🎬 **Video Recording** - WebM with VP9/VP8 codec, configurable bitrate (1-15 Mbps) and FPS (24-60)
+- 🌍 **HDR Environment Maps** - RGBELoader for .hdr/.exr files with realistic reflections
+- 🖼️ **HDR Background** - Optional environment background with blur control
+- ⏱️ **Recording Timer** - Real-time duration display during video capture
+- 📊 **New Capture Tab** - Dedicated tab for all capture controls
+
+### v2.5 (December 2024) - Sprint 1: Visual Evolution
+**New Features:**
+- ✨ **Post-Processing Pipeline** - WebGPU-native bloom, chromatic aberration, vignette
+- 🎨 **TSL Bloom Effect** - Configurable intensity, threshold, and radius
+- 🌈 **Chromatic Aberration** - RGB color separation effect
+- 📦 **GLTF Import** - Load custom 3D models with automatic centering and normalization
+- 📤 **TSL Code Export** - Copy/download shader code for external use
+- 🎯 **Effects Tab** - Centralized post-processing controls
+
 ### v2.1 (December 2024)
 **New Features:**
 - 🎬 **Camera Tab** - FOV, distance limits, damping controls
@@ -186,11 +209,14 @@ Open the **SHADER STUDIO** panel at the bottom of the screen:
 - [x] Camera controls (FOV, distance)
 - [x] Advanced animation controls
 - [x] Keyboard shortcuts
-- [ ] More geometry types (custom meshes, GLTF import)
+- [x] GLTF import (custom meshes)
+- [x] Post-processing effects (bloom, chromatic aberration, vignette)
+- [x] TSL shader code export
+- [x] Screenshot capture (PNG/JPEG)
+- [x] Video recording (WebM)
+- [x] HDR environment maps
 - [ ] Audio reactivity (microphone/audio file input)
-- [ ] Post-processing effects (bloom, chromatic aberration)
 - [ ] VR/AR support via WebXR
-- [ ] Shader code export (GLSL/WGSL)
 - [ ] Community preset gallery
 - [ ] Mobile touch controls
 
