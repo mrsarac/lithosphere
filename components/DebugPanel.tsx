@@ -87,9 +87,11 @@ export interface MeshSource {
 export interface CameraConfig {
   fov: number;
   distance: number;
+  targetY: number;
   minDistance: number;
   maxDistance: number;
   dampingFactor: number;
+  locked: boolean;
 }
 
 export interface PostProcessConfig {
@@ -198,9 +200,11 @@ export const DEFAULT_CONFIG: ShaderConfig = {
   camera: {
     fov: 35,
     distance: 5,
+    targetY: 0,
     minDistance: 2,
     maxDistance: 15,
     dampingFactor: 0.03,
+    locked: false,
   },
   postProcess: {
     exposure: 1.3,
@@ -946,12 +950,25 @@ interface DebugPanelProps {
   onConfigChange: (config: ShaderConfig) => void;
   onMeshImport?: (file: File) => void;
   onEnvMapImport?: (file: File) => void;
+  onPanelToggle?: (isOpen: boolean) => void;
   rendererRef?: React.MutableRefObject<any>;
 }
 
-const DebugPanel: React.FC<DebugPanelProps> = ({ config, onConfigChange, onMeshImport, onEnvMapImport, rendererRef }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const DebugPanel: React.FC<DebugPanelProps> = ({ config, onConfigChange, onMeshImport, onEnvMapImport, onPanelToggle, rendererRef }) => {
+  const [isOpen, setIsOpenState] = useState(false);
   const [activeTab, setActiveTab] = useState<'core' | 'gel' | 'lighting' | 'animation' | 'shape' | 'camera' | 'effects' | 'capture' | 'presets' | 'ai' | 'info'>('core');
+
+  // Wrapper to notify parent of panel state changes
+  const setIsOpen = useCallback((newState: boolean | ((prev: boolean) => boolean)) => {
+    setIsOpenState((prev) => {
+      const nextState = typeof newState === 'function' ? newState(prev) : newState;
+      // Notify parent of panel state change
+      if (onPanelToggle && nextState !== prev) {
+        onPanelToggle(nextState);
+      }
+      return nextState;
+    });
+  }, [onPanelToggle]);
 
   // Capture state
   const [captureConfig, setCaptureConfig] = useState<CaptureConfig>(DEFAULT_CAPTURE_CONFIG);
@@ -1760,18 +1777,122 @@ const gelMaterial = new MeshPhysicalNodeMaterial({
 
             {/* Camera Tab */}
             {activeTab === 'camera' && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Section title="Field of View" icon="📷" defaultOpen>
-                  <Slider label="FOV" value={config.camera.fov} min={20} max={90} step={1} onChange={(v) => updateCamera({ fov: v })} unit="°" tooltip="Camera field of view" />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Section title="Position" icon="📷" defaultOpen badge="New">
+                  <Slider
+                    label="Distance"
+                    value={config.camera.distance}
+                    min={config.camera.minDistance}
+                    max={config.camera.maxDistance}
+                    step={0.1}
+                    onChange={(v) => updateCamera({ distance: v })}
+                    tooltip="Camera distance from center"
+                  />
+                  <Slider
+                    label="FOV"
+                    value={config.camera.fov}
+                    min={20}
+                    max={90}
+                    step={1}
+                    onChange={(v) => updateCamera({ fov: v })}
+                    unit="°"
+                    tooltip="Camera field of view"
+                  />
+                </Section>
+
+                <Section title="Orbit Target" icon="🎯" defaultOpen badge="New">
+                  <Slider
+                    label="Target Y"
+                    value={config.camera.targetY}
+                    min={-2}
+                    max={2}
+                    step={0.1}
+                    onChange={(v) => updateCamera({ targetY: v })}
+                    tooltip="Vertical position of orbit center"
+                  />
+                  <Toggle
+                    label="Lock Camera"
+                    value={config.camera.locked}
+                    onChange={(v) => updateCamera({ locked: v })}
+                    tooltip="Prevent camera movement"
+                  />
                 </Section>
 
                 <Section title="Distance Limits" icon="📏" defaultOpen>
-                  <Slider label="Min Distance" value={config.camera.minDistance} min={1} max={5} step={0.5} onChange={(v) => updateCamera({ minDistance: v })} />
-                  <Slider label="Max Distance" value={config.camera.maxDistance} min={5} max={30} step={1} onChange={(v) => updateCamera({ maxDistance: v })} />
+                  <Slider
+                    label="Min"
+                    value={config.camera.minDistance}
+                    min={1}
+                    max={config.camera.distance - 0.5}
+                    step={0.5}
+                    onChange={(v) => updateCamera({ minDistance: v })}
+                    tooltip="Minimum zoom distance"
+                  />
+                  <Slider
+                    label="Max"
+                    value={config.camera.maxDistance}
+                    min={config.camera.distance + 0.5}
+                    max={30}
+                    step={1}
+                    onChange={(v) => updateCamera({ maxDistance: v })}
+                    tooltip="Maximum zoom distance"
+                  />
                 </Section>
 
                 <Section title="Controls" icon="🎮" defaultOpen>
-                  <Slider label="Damping" value={config.camera.dampingFactor} min={0.01} max={0.2} step={0.01} onChange={(v) => updateCamera({ dampingFactor: v })} tooltip="Camera movement smoothness" />
+                  <Slider
+                    label="Damping"
+                    value={config.camera.dampingFactor}
+                    min={0.01}
+                    max={0.2}
+                    step={0.01}
+                    onChange={(v) => updateCamera({ dampingFactor: v })}
+                    tooltip="Camera movement smoothness"
+                  />
+                  <button
+                    onClick={() => updateCamera({
+                      distance: DEFAULT_CONFIG.camera.distance,
+                      targetY: DEFAULT_CONFIG.camera.targetY,
+                      fov: DEFAULT_CONFIG.camera.fov,
+                    })}
+                    className="w-full mt-2 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-amber-500/50 rounded text-[11px] text-zinc-300 transition-all flex items-center justify-center gap-2"
+                  >
+                    <span>🎯</span>
+                    <span>Reset to Default</span>
+                  </button>
+                </Section>
+
+                {/* Camera Presets */}
+                <Section title="Presets" icon="🎬" defaultOpen badge="New" className="md:col-span-2 lg:col-span-4">
+                  <div className="grid grid-cols-4 gap-2">
+                    <button
+                      onClick={() => updateCamera({ distance: 5, targetY: 0, fov: 35 })}
+                      className="py-2 px-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-amber-500/50 rounded text-[10px] text-zinc-300 transition-all"
+                    >
+                      🎯 Default
+                    </button>
+                    <button
+                      onClick={() => updateCamera({ distance: 2.5, targetY: 0.2, fov: 45 })}
+                      className="py-2 px-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-cyan-500/50 rounded text-[10px] text-zinc-300 transition-all"
+                    >
+                      🔍 Close-Up
+                    </button>
+                    <button
+                      onClick={() => updateCamera({ distance: 10, targetY: 0, fov: 25 })}
+                      className="py-2 px-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-purple-500/50 rounded text-[10px] text-zinc-300 transition-all"
+                    >
+                      🌌 Wide Shot
+                    </button>
+                    <button
+                      onClick={() => updateCamera({ distance: 6, targetY: -1, fov: 40 })}
+                      className="py-2 px-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-emerald-500/50 rounded text-[10px] text-zinc-300 transition-all"
+                    >
+                      ⬆️ Top-Down
+                    </button>
+                  </div>
+                  <p className="text-[9px] text-zinc-500 mt-2 text-center">
+                    Click a preset to smoothly transition the camera
+                  </p>
                 </Section>
               </div>
             )}

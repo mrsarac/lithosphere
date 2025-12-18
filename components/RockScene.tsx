@@ -48,6 +48,22 @@ const {
 // === SCENE REFS FOR RUNTIME UPDATES ===
 // ============================================
 
+// Easing and interpolation utilities
+const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+interface CameraAnimationState {
+  isAnimating: boolean;
+  startDistance: number;
+  targetDistance: number;
+  startTargetY: number;
+  targetTargetY: number;
+  startFov: number;
+  targetFov: number;
+  startTime: number;
+  duration: number;
+}
+
 interface SceneRefs {
   coreMesh: THREE.Mesh | null;
   gelMesh: THREE.Mesh | null;
@@ -67,6 +83,10 @@ interface SceneRefs {
   renderer: any;
   // Environment
   envMap: THREE.Texture | null;
+  // Camera animation
+  cameraAnimation: CameraAnimationState | null;
+  panelOpenDistance: number; // Distance when panel is open
+  panelClosedDistance: number; // Distance when panel is closed
   // Post-processing
   postProcessing: any;
   bloomPass: any;
@@ -125,6 +145,10 @@ const RockScene: React.FC = () => {
     renderer: null,
     // Environment
     envMap: null,
+    // Camera animation
+    cameraAnimation: null,
+    panelOpenDistance: DEFAULT_CONFIG.camera.distance + 2, // +2 units when panel opens
+    panelClosedDistance: DEFAULT_CONFIG.camera.distance,
     // Post-processing
     postProcessing: null,
     bloomPass: null,
@@ -156,6 +180,19 @@ const RockScene: React.FC = () => {
       refs.controls.minDistance = newConfig.camera.minDistance;
       refs.controls.maxDistance = newConfig.camera.maxDistance;
       refs.controls.dampingFactor = newConfig.camera.dampingFactor;
+      refs.controls.enabled = !newConfig.camera.locked; // Lock camera toggle
+      refs.controls.target.y = newConfig.camera.targetY; // Orbit target Y position
+    }
+
+    // Update camera distance (smooth transition via damping)
+    if (refs.camera && refs.controls) {
+      const currentDistance = refs.camera.position.length();
+      const targetDistance = newConfig.camera.distance;
+      // Only update if difference is significant (> 0.1) to avoid jitter from slider
+      if (Math.abs(currentDistance - targetDistance) > 0.1) {
+        const direction = refs.camera.position.clone().normalize();
+        refs.camera.position.copy(direction.multiplyScalar(targetDistance));
+      }
     }
 
     // Update renderer (tone mapping)
@@ -309,6 +346,44 @@ const RockScene: React.FC = () => {
     setConfig(newConfig);
     updateSceneFromConfig(newConfig);
   }, [updateSceneFromConfig]);
+
+  // Handle panel toggle - animate camera when panel opens/closes
+  const handlePanelToggle = useCallback((isOpen: boolean) => {
+    const refs = sceneRefs.current;
+    if (!refs.controls || !refs.camera) return;
+
+    const currentDistance = refs.camera.position.length();
+    const currentTargetY = refs.controls.target.y;
+
+    // Calculate target values based on panel state
+    const targetDistance = isOpen
+      ? currentDistance + 2  // Zoom out +2 units when panel opens
+      : refs.panelClosedDistance; // Return to default when panel closes
+
+    const targetTargetY = isOpen
+      ? 0.8  // Move target up when panel opens
+      : 0;   // Return to center when panel closes
+
+    // Start camera animation
+    refs.cameraAnimation = {
+      isAnimating: true,
+      startDistance: currentDistance,
+      targetDistance,
+      startTargetY: currentTargetY,
+      targetTargetY,
+      startFov: refs.camera.fov,
+      targetFov: refs.camera.fov, // Keep current FOV
+      startTime: performance.now(),
+      duration: 500, // 0.5 seconds
+    };
+
+    // Update panel distances for future reference
+    if (isOpen) {
+      refs.panelOpenDistance = targetDistance;
+    }
+
+    console.log(`[Camera] Panel ${isOpen ? 'opened' : 'closed'} - animating to distance: ${targetDistance}, targetY: ${targetTargetY}`);
+  }, []);
 
   // Handle GLTF mesh import
   const handleMeshImport = useCallback((file: File) => {
@@ -844,6 +919,36 @@ const RockScene: React.FC = () => {
         const elapsed = clock.getElapsedTime();
 
         uTime.value = elapsed;
+
+        // Camera animation system
+        const refs = sceneRefs.current;
+        if (refs.cameraAnimation?.isAnimating) {
+          const anim = refs.cameraAnimation;
+          const animElapsed = (performance.now() - anim.startTime) / anim.duration;
+          const t = Math.min(animElapsed, 1);
+          const eased = easeOutCubic(t);
+
+          // Interpolate camera distance
+          const newDistance = lerp(anim.startDistance, anim.targetDistance, eased);
+          const direction = camera.position.clone().normalize();
+          camera.position.copy(direction.multiplyScalar(newDistance));
+
+          // Interpolate orbit target Y
+          const newTargetY = lerp(anim.startTargetY, anim.targetTargetY, eased);
+          controls.target.y = newTargetY;
+
+          // Interpolate FOV if needed
+          if (anim.startFov !== anim.targetFov) {
+            camera.fov = lerp(anim.startFov, anim.targetFov, eased);
+            camera.updateProjectionMatrix();
+          }
+
+          // End animation
+          if (t >= 1) {
+            refs.cameraAnimation.isAnimating = false;
+          }
+        }
+
         controls.update();
 
         // Loading sequence
@@ -988,7 +1093,14 @@ const RockScene: React.FC = () => {
       )}
 
       {/* Debug Panel */}
-      <DebugPanel config={config} onConfigChange={handleConfigChange} onMeshImport={handleMeshImport} onEnvMapImport={handleEnvMapImport} rendererRef={rendererRef} />
+      <DebugPanel
+        config={config}
+        onConfigChange={handleConfigChange}
+        onMeshImport={handleMeshImport}
+        onEnvMapImport={handleEnvMapImport}
+        onPanelToggle={handlePanelToggle}
+        rendererRef={rendererRef}
+      />
     </div>
   );
 };
