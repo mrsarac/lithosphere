@@ -35,6 +35,9 @@ export const VERSION_HISTORY: VersionEntry[] = [
       { emoji: '✨', title: 'Material-Specific Effects', description: 'Spectral dispersion, play of color, subsurface scattering' },
       { emoji: '🎨', title: 'Material Picker UI', description: 'Browse and switch materials with live preview' },
       { emoji: '📚', title: 'Geological Story Mode', description: 'Watch how each material forms over millions of years' },
+      { emoji: '🪝', title: 'useMaterial Hook', description: 'React hook for material system integration with audio reactivity' },
+      { emoji: '🎯', title: 'MaterialSelector', description: 'Drop-in component for material switching and story access' },
+      { emoji: '🎭', title: 'TSL Shader Effects', description: '20+ reusable shader nodes: inclusions, patterns, spectral, subsurface' },
     ],
   },
   {
