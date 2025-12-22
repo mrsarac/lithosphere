@@ -128,6 +128,10 @@ export abstract class BaseMaterial {
       envMapIntensity: optical.envMapIntensity,
     });
 
+    // IMPORTANT: Assign to this.material BEFORE applying effects
+    // so that applyEffects() can access this.material.emissiveNode etc.
+    this.material = mat;
+
     // Apply material-specific TSL effects
     this.applyEffects();
 

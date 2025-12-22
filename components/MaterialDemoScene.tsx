@@ -134,17 +134,22 @@ const MaterialDemoScene: React.FC<MaterialDemoSceneProps> = ({ materialHook }) =
 
     // Post-processing
     let postProcessing: PostProcessing | null = null;
+    let rendererReady = false;
 
-    const initPostProcessing = async () => {
+    const initAndStart = async () => {
+      // IMPORTANT: Initialize renderer BEFORE any render calls
       await renderer.init();
+      rendererReady = true;
 
+      // Set up post-processing after renderer is ready
       postProcessing = new PostProcessing(renderer);
       const scenePass = pass(scene, camera);
       const bloomPass = bloom(scenePass, 0.5, 0.4, 0.85);
       postProcessing.outputNode = bloomPass;
-    };
 
-    initPostProcessing();
+      // Start animation loop AFTER renderer is initialized
+      animate();
+    };
 
     // Animation loop
     const animate = () => {
@@ -164,6 +169,9 @@ const MaterialDemoScene: React.FC<MaterialDemoSceneProps> = ({ materialHook }) =
       // Update controls
       controls.update();
 
+      // Only render if renderer is initialized
+      if (!rendererReady) return;
+
       // Render
       if (postProcessing) {
         postProcessing.render();
@@ -172,7 +180,7 @@ const MaterialDemoScene: React.FC<MaterialDemoSceneProps> = ({ materialHook }) =
       }
     };
 
-    animate();
+    initAndStart();
 
     // Resize handler
     const handleResize = () => {

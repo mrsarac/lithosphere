@@ -221,7 +221,12 @@ export function useMaterial(options: UseMaterialOptions = {}): UseMaterialReturn
     audioDataRef.current = data;
 
     if (currentMaterial && isAudioEnabled) {
-      currentMaterial.updateAudio(data.bass, data.mid, data.treble, data.volume);
+      // Pass audio data as object to match BaseMaterial.updateAudio signature
+      currentMaterial.updateAudio({
+        bass: data.bass,
+        mid: data.mid,
+        energy: data.volume,
+      });
     }
   }, [currentMaterial, isAudioEnabled]);
 
@@ -249,13 +254,18 @@ export function useMaterial(options: UseMaterialOptions = {}): UseMaterialReturn
   // Animation update (call in render loop)
   const update = useCallback((deltaTime: number) => {
     if (currentMaterial) {
-      // Update material effects
-      currentMaterial.updateEffects(deltaTime);
+      // Update material effects (calls protected updateEffects internally)
+      currentMaterial.update(deltaTime);
 
       // Apply continuous audio reactivity if enabled
       if (isAudioEnabled) {
         const { bass, mid, treble, volume } = audioDataRef.current;
-        currentMaterial.updateAudio(bass, mid, treble, volume);
+        // Pass audio data as object to match BaseMaterial.updateAudio signature
+        currentMaterial.updateAudio({
+          bass,
+          mid,
+          energy: volume,
+        });
       }
     }
   }, [currentMaterial, isAudioEnabled]);
