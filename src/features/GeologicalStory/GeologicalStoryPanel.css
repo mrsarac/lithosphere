@@ -1,0 +1,458 @@
+/**
+ * LITHOSPHERE v7.0 - Geological Story Panel Styles
+ *
+ * Joy Team Feature: Earthy, warm tones for the formation story UI.
+ */
+
+/* ============================================================================
+   PANEL CONTAINER
+   ============================================================================ */
+
+.geological-story-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(180deg, #1a1812 0%, #0d0b08 100%);
+  border-top: 1px solid rgba(180, 140, 80, 0.3);
+  border-radius: 16px 16px 0 0;
+  padding: 20px;
+  z-index: 100;
+  max-height: 50vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+  box-shadow:
+    0 -10px 40px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(180, 140, 80, 0.05);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================================
+   HEADER
+   ============================================================================ */
+
+.story-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.story-icon {
+  font-size: 1.75rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.story-title-section {
+  flex: 1;
+}
+
+.story-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #e8dcc8;
+  font-family: 'Georgia', serif;
+}
+
+.story-timescale {
+  font-size: 0.75rem;
+  color: rgba(180, 140, 80, 0.8);
+  font-style: italic;
+}
+
+.story-close {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.story-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* ============================================================================
+   DESCRIPTION
+   ============================================================================ */
+
+.story-description {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  border-left: 3px solid rgba(180, 140, 80, 0.5);
+}
+
+.story-description p {
+  margin: 0 0 12px 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.6;
+  font-family: 'Georgia', serif;
+}
+
+.story-conditions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.conditions-label {
+  font-size: 0.7rem;
+  color: rgba(180, 140, 80, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.conditions-value {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ============================================================================
+   TIMELINE
+   ============================================================================ */
+
+.story-timeline {
+  position: relative;
+  margin-bottom: 20px;
+  padding: 30px 10px 10px;
+}
+
+.timeline-keyframes {
+  position: absolute;
+  top: 0;
+  left: 10px;
+  right: 10px;
+  height: 24px;
+}
+
+.timeline-keyframe {
+  position: absolute;
+  transform: translateX(-50%);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.keyframe-dot {
+  width: 12px;
+  height: 12px;
+  background: rgba(100, 80, 60, 0.8);
+  border: 2px solid rgba(180, 140, 80, 0.5);
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.timeline-keyframe:hover .keyframe-dot,
+.timeline-keyframe.active .keyframe-dot {
+  background: rgba(180, 140, 80, 1);
+  border-color: rgba(220, 180, 100, 0.8);
+  transform: scale(1.2);
+  box-shadow: 0 0 10px rgba(180, 140, 80, 0.5);
+}
+
+.timeline-keyframe.passed .keyframe-dot {
+  background: rgba(180, 140, 80, 0.6);
+}
+
+.keyframe-label {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.4);
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.timeline-keyframe:hover .keyframe-label,
+.timeline-keyframe.active .keyframe-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Progress Track */
+.timeline-progress-track {
+  position: relative;
+  height: 6px;
+  background: rgba(100, 80, 60, 0.3);
+  border-radius: 3px;
+  cursor: pointer;
+  overflow: visible;
+}
+
+.timeline-progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #8b6914 0%, #d4a84b 100%);
+  border-radius: 3px;
+  transition: width 0.1s linear;
+}
+
+.timeline-progress-handle {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  background: #e8dcc8;
+  border: 2px solid #d4a84b;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.1s ease;
+}
+
+.timeline-progress-track:hover .timeline-progress-handle {
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+/* Time Display */
+.timeline-time {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 8px;
+  font-family: 'Monaco', 'Consolas', monospace;
+  font-size: 0.8rem;
+}
+
+.time-elapsed {
+  color: rgba(220, 180, 100, 0.9);
+}
+
+.time-separator {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.time-total {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ============================================================================
+   CURRENT STAGE
+   ============================================================================ */
+
+.story-current-stage {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: rgba(180, 140, 80, 0.1);
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.stage-indicator {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.stage-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #d4a84b;
+  font-family: 'Georgia', serif;
+}
+
+.stage-total {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.stage-info {
+  flex: 1;
+}
+
+.stage-label {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e8dcc8;
+}
+
+/* ============================================================================
+   CONTROLS
+   ============================================================================ */
+
+.story-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(180, 140, 80, 0.2);
+  margin-bottom: 16px;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.control-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(100, 80, 60, 0.3);
+  border: 1px solid rgba(180, 140, 80, 0.3);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.control-button:hover {
+  background: rgba(100, 80, 60, 0.5);
+  border-color: rgba(180, 140, 80, 0.5);
+}
+
+.control-button.primary {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #8b6914 0%, #d4a84b 100%);
+  border-color: transparent;
+  font-size: 1.25rem;
+}
+
+.control-button.primary:hover {
+  background: linear-gradient(135deg, #a07918 0%, #e4b85b 100%);
+  transform: scale(1.05);
+}
+
+.speed-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-right: 4px;
+}
+
+.speed-button {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid rgba(180, 140, 80, 0.3);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.speed-button:hover {
+  background: rgba(180, 140, 80, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.speed-button.active {
+  background: rgba(180, 140, 80, 0.4);
+  border-color: rgba(180, 140, 80, 0.6);
+  color: #fff;
+}
+
+/* ============================================================================
+   FORMATION FACTS
+   ============================================================================ */
+
+.story-facts {
+  padding-top: 12px;
+  border-top: 1px solid rgba(180, 140, 80, 0.15);
+}
+
+.story-facts h4 {
+  margin: 0 0 12px 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(180, 140, 80, 0.7);
+}
+
+.facts-grid {
+  display: flex;
+  gap: 16px;
+}
+
+.fact-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fact-icon {
+  font-size: 1rem;
+}
+
+.fact-text {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ============================================================================
+   SCROLLBAR
+   ============================================================================ */
+
+.geological-story-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.geological-story-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.geological-story-panel::-webkit-scrollbar-thumb {
+  background: rgba(180, 140, 80, 0.3);
+  border-radius: 3px;
+}
+
+.geological-story-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(180, 140, 80, 0.5);
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .geological-story-panel {
+    padding: 16px;
+    max-height: 60vh;
+  }
+
+  .story-title {
+    font-size: 1.1rem;
+  }
+
+  .story-controls {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .timeline-keyframes {
+    display: none;
+  }
+
+  .facts-grid {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
