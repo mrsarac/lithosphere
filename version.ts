@@ -11,9 +11,9 @@
  * - PATCH: Bug fixes, small improvements
  */
 
-export const VERSION = '6.0.0-alpha.3';
-export const VERSION_SHORT = 'v6.0.0-α3';
-export const VERSION_NAME = 'Cosmic Symphony';
+export const VERSION = '7.0.0-alpha.1';
+export const VERSION_SHORT = 'v7.0.0-α1';
+export const VERSION_NAME = 'Crystallum';
 export const BUILD_DATE = '2025-12-22';
 
 // Version history for changelog display
@@ -25,6 +25,18 @@ export interface VersionEntry {
 }
 
 export const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: '7.0.0-alpha.1',
+    date: '2025-12-22',
+    name: 'Crystallum',
+    features: [
+      { emoji: '💎', title: 'Multi-Material System', description: 'Render any gemstone, volcanic, or crystalline material' },
+      { emoji: '🌋', title: '5 Core Materials', description: 'Diamond, Obsidian, Quartz, Amber, Opal with unique shaders' },
+      { emoji: '✨', title: 'Material-Specific Effects', description: 'Spectral dispersion, play of color, subsurface scattering' },
+      { emoji: '🎨', title: 'Material Picker UI', description: 'Browse and switch materials with live preview' },
+      { emoji: '📚', title: 'Geological Story Mode', description: 'Watch how each material forms over millions of years' },
+    ],
+  },
   {
     version: '6.0.0-alpha.3',
     date: '2025-12-22',
