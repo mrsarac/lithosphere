@@ -11,8 +11,8 @@
  * - PATCH: Bug fixes, small improvements
  */
 
-export const VERSION = '6.0.0-alpha.2';
-export const VERSION_SHORT = 'v6.0.0-α2';
+export const VERSION = '6.0.0-alpha.3';
+export const VERSION_SHORT = 'v6.0.0-α3';
 export const VERSION_NAME = 'Cosmic Symphony';
 export const BUILD_DATE = '2025-12-22';
 
@@ -25,6 +25,16 @@ export interface VersionEntry {
 }
 
 export const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: '6.0.0-alpha.3',
+    date: '2025-12-22',
+    name: 'Cosmic Symphony',
+    features: [
+      { emoji: '🔧', title: 'Hand Mirror Fix', description: 'Fixed mirrored video causing inverted hand detection' },
+      { emoji: '🎯', title: 'Correct Hand Tracking', description: 'Left/right hands now match user perspective' },
+      { emoji: '📐', title: 'X-Coordinate Mirroring', description: 'Landmarks properly aligned with mirrored webcam display' },
+    ],
+  },
   {
     version: '6.0.0-alpha.2',
     date: '2025-12-22',

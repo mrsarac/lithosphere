@@ -447,13 +447,24 @@ export class GestureController {
     confidence: number,
     handId: string
   ): HandData {
+    // Mirror X coordinates to match the mirrored video display
+    // The video is displayed with scaleX(-1), so we need to flip X: x -> 1 - x
+    const mirroredLandmarks = landmarks.map(lm => ({
+      ...lm,
+      x: 1 - lm.x,
+    }));
+    const mirroredWorldLandmarks = worldLandmarks.map(lm => ({
+      ...lm,
+      x: 1 - lm.x,
+    }));
+
     // Calculate palm position (average of wrist and MCP joints)
     const palmLandmarks = [
-      landmarks[LANDMARKS.WRIST],
-      landmarks[LANDMARKS.INDEX_MCP],
-      landmarks[LANDMARKS.MIDDLE_MCP],
-      landmarks[LANDMARKS.RING_MCP],
-      landmarks[LANDMARKS.PINKY_MCP],
+      mirroredLandmarks[LANDMARKS.WRIST],
+      mirroredLandmarks[LANDMARKS.INDEX_MCP],
+      mirroredLandmarks[LANDMARKS.MIDDLE_MCP],
+      mirroredLandmarks[LANDMARKS.RING_MCP],
+      mirroredLandmarks[LANDMARKS.PINKY_MCP],
     ];
 
     let palmX = 0, palmY = 0, palmZ = 0;
@@ -469,14 +480,14 @@ export class GestureController {
     // Apply smoothing
     const smoothedPos = this.smoothPosition(handId, palmX, palmY, palmZ);
 
-    // Calculate palm rotation (angle from wrist to middle MCP)
-    const wrist = landmarks[LANDMARKS.WRIST];
-    const middleMcp = landmarks[LANDMARKS.MIDDLE_MCP];
+    // Calculate palm rotation (angle from wrist to middle MCP) - use mirrored coords
+    const wrist = mirroredLandmarks[LANDMARKS.WRIST];
+    const middleMcp = mirroredLandmarks[LANDMARKS.MIDDLE_MCP];
     const rotation = Math.atan2(middleMcp.y - wrist.y, middleMcp.x - wrist.x) * (180 / Math.PI);
 
-    // Detect pinch (thumb tip to index tip distance)
-    const thumbTip = landmarks[LANDMARKS.THUMB_TIP];
-    const indexTip = landmarks[LANDMARKS.INDEX_TIP];
+    // Detect pinch (thumb tip to index tip distance) - use mirrored coords
+    const thumbTip = mirroredLandmarks[LANDMARKS.THUMB_TIP];
+    const indexTip = mirroredLandmarks[LANDMARKS.INDEX_TIP];
     const pinchDistance = Math.sqrt(
       Math.pow(thumbTip.x - indexTip.x, 2) +
       Math.pow(thumbTip.y - indexTip.y, 2)
@@ -485,8 +496,8 @@ export class GestureController {
     const pinchStrength = Math.max(0, 1 - pinchDistance / this.config.pinchThreshold);
 
     return {
-      landmarks,
-      worldLandmarks,
+      landmarks: mirroredLandmarks,
+      worldLandmarks: mirroredWorldLandmarks,
       gesture,
       confidence,
       palmPosition: smoothedPos,
