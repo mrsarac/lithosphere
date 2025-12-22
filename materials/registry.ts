@@ -38,7 +38,7 @@ export interface TierAccess {
 // MATERIAL REGISTRY
 // ============================================================================
 
-class MaterialRegistry {
+export class MaterialRegistry {
   private static instance: MaterialRegistry;
   private materials: Map<string, RegisteredMaterial> = new Map();
   private presets: Map<string, MaterialPreset> = new Map();

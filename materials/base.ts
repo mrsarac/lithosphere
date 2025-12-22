@@ -7,11 +7,12 @@
 
 import {
   MeshPhysicalMaterial,
-  MeshPhysicalNodeMaterial,
   Color,
   Vector3,
   Uniform,
 } from 'three';
+// @ts-ignore - WebGPU module
+import { MeshPhysicalNodeMaterial } from 'three/webgpu';
 import {
   uniform,
   float,

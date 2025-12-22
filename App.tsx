@@ -1,11 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import RockScene from './components/RockScene';
+import MaterialDemoScene from './components/MaterialDemoScene';
+import { MaterialSelector } from './src/components/MaterialSelector';
+import { useMaterial } from './src/hooks';
 import { checkWebGPUSupport } from './services/webGpuService';
 import { VERSION_SHORT } from './version';
+
+type SceneMode = 'classic' | 'crystallum';
 
 const App: React.FC = () => {
   const [isWebGPUSupported, setIsWebGPUSupported] = useState<boolean | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [sceneMode, setSceneMode] = useState<SceneMode>('crystallum');
+
+  // Material system hook (only used in crystallum mode)
+  const materialHook = useMaterial({
+    initialMaterial: 'diamond',
+    onMaterialChange: (material, def) => {
+      console.log(`[App] Material changed to: ${def.name}`);
+    },
+  });
 
   useEffect(() => {
     checkWebGPUSupport().then((supported) => {
@@ -37,8 +51,18 @@ const App: React.FC = () => {
 
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden">
-      <RockScene />
-      
+      {/* Scene */}
+      {sceneMode === 'classic' ? (
+        <RockScene />
+      ) : (
+        <MaterialDemoScene materialHook={materialHook} />
+      )}
+
+      {/* Material Selector (only in crystallum mode) */}
+      {sceneMode === 'crystallum' && materialHook.isInitialized && (
+        <MaterialSelector materialHook={materialHook} />
+      )}
+
       {/* UI Overlay */}
       <div className="absolute top-0 left-0 w-full p-6 pointer-events-none flex justify-between items-start">
         <div>
@@ -46,8 +70,31 @@ const App: React.FC = () => {
             Lithosphere <span className="text-xs text-amber-500 align-top">{VERSION_SHORT}</span>
           </h1>
           <p className="text-white/40 text-xs font-mono mt-1">
-            WebGPU Procedural Generation
+            {sceneMode === 'crystallum' ? 'Material System Demo' : 'WebGPU Procedural Generation'}
           </p>
+          {/* Scene Mode Toggle */}
+          <div className="flex gap-2 mt-3 pointer-events-auto">
+            <button
+              onClick={() => setSceneMode('classic')}
+              className={`px-3 py-1 text-xs font-mono rounded transition-all ${
+                sceneMode === 'classic'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-white/5 text-white/40 hover:bg-white/10'
+              }`}
+            >
+              Classic
+            </button>
+            <button
+              onClick={() => setSceneMode('crystallum')}
+              className={`px-3 py-1 text-xs font-mono rounded transition-all ${
+                sceneMode === 'crystallum'
+                  ? 'bg-amber-500/30 text-amber-300 border border-amber-500/50'
+                  : 'bg-white/5 text-white/40 hover:bg-white/10'
+              }`}
+            >
+              Crystallum
+            </button>
+          </div>
         </div>
         <div className="text-right">
           <div className="flex items-center gap-2 justify-end">
@@ -55,7 +102,7 @@ const App: React.FC = () => {
             <span className="text-white/60 text-xs font-mono">60 FPS LOCKED</span>
           </div>
           <p className="text-white/30 text-[10px] font-mono mt-1">
-            TSL / NOISE DERIVATIVES
+            {sceneMode === 'crystallum' ? 'TSL / MATERIAL SYSTEM' : 'TSL / NOISE DERIVATIVES'}
           </p>
         </div>
       </div>
