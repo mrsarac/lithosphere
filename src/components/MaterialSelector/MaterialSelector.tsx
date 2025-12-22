@@ -91,17 +91,15 @@ export const MaterialSelector: React.FC<MaterialSelectorProps> = ({
       </button>
 
       {/* Material Picker Dropdown */}
-      {isPickerOpen && (
-        <div className="material-picker-dropdown">
-          <MaterialPicker
-            materials={allMaterials}
-            selectedMaterialId={currentDefinition.id}
-            onSelect={handleSelectMaterial}
-            onClose={() => setPickerOpen(false)}
-            userTier="free"
-          />
-        </div>
-      )}
+      <div className="material-picker-dropdown">
+        <MaterialPicker
+          currentMaterialId={currentDefinition.id}
+          onMaterialSelect={handleSelectMaterial}
+          onClose={() => setPickerOpen(false)}
+          isOpen={isPickerOpen}
+          userTier="free"
+        />
+      </div>
 
       {/* Geological Story Panel */}
       {currentDefinition.geologicalStory && storyState && (
